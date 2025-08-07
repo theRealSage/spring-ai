@@ -115,6 +115,77 @@
         </div>
     </div>
 
+    <!-- Test Generation Section -->
+    <div id="test-generation-section" class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <h2 class="text-2xl font-semibold text-indigo-600 mb-4">Test Generation</h2>
+        
+        <!-- Test Generation Form -->
+        <div id="test-generation-form">
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                        <select id="language" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="java">Java</option>
+                            <option value="python">Python</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="framework" class="block text-sm font-medium text-gray-700 mb-1">Framework</label>
+                        <select id="framework" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="junit">JUnit</option>
+                            <option value="mockito">Mockito</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="className" class="block text-sm font-medium text-gray-700 mb-1">Class Name</label>
+                    <input type="text" id="className" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., UserService">
+                </div>
+                
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="description" rows="2" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Brief description of what's being tested..."></textarea>
+                </div>
+                
+                <div>
+                    <label for="fileContent" class="block text-sm font-medium text-gray-700 mb-1">File Content</label>
+                    <textarea id="fileContent" rows="8" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm" placeholder="Paste the content of the file to be tested here..."></textarea>
+                </div>
+                
+                <div>
+                    <label for="userMessage" class="block text-sm font-medium text-gray-700 mb-1">User Message</label>
+                    <textarea id="userMessage" rows="3" class="input-field w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Any additional instructions or context for test generation..."></textarea>
+                </div>
+                
+                <div class="flex justify-end pt-2">
+                    <button onclick="generateTest()" class="btn-demo bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        Generate Test
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Generation Result -->
+        <div id="test-generation-result" class="hidden mt-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Generated Test</h3>
+                <button onclick="copyTestToClipboard()" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center">
+                    <i class="far fa-copy mr-1"></i> Copy
+                </button>
+            </div>
+            <div id="test-result-content" class="bg-gray-50 p-4 rounded-lg overflow-auto max-h-96">
+                <!-- Test result will be displayed here -->
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button onclick="resetTestForm()" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                    Generate Another Test
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         async function callApi(demoNumber) {
             const organization = document.getElementById('organization').value;
@@ -180,21 +251,128 @@
         }
 
         function copyToClipboard() {
-            const response = document.getElementById('response');
-            const textToCopy = response.innerText;
+            var copyText = document.getElementById("result");
+            var textArea = document.createElement("textarea");
+            textArea.value = copyText.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
             
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                const copyBtn = document.querySelector('[onclick="copyToClipboard()"]');
-                const originalHtml = copyBtn.innerHTML;
-                copyBtn.innerHTML = '<i class="fas fa-check"></i>';
-                copyBtn.classList.add('text-green-600');
-                setTimeout(() => {
-                    copyBtn.innerHTML = originalHtml;
-                    copyBtn.classList.remove('text-green-600');
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
+            // Show copied notification
+            var copyButton = document.querySelector("button[onclick='copyToClipboard()']");
+            var originalText = copyButton.innerHTML;
+            copyButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            
+            setTimeout(function() {
+                copyButton.innerHTML = originalText;
+            }, 2000);
+        }
+
+        function copyTestToClipboard() {
+            var copyText = document.getElementById("test-result-content");
+            var textArea = document.createElement("textarea");
+            textArea.value = copyText.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // Show copied notification
+            var copyButton = document.querySelector("button[onclick='copyTestToClipboard()']");
+            var originalText = copyButton.innerHTML;
+            copyButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            
+            setTimeout(function() {
+                copyButton.innerHTML = originalText;
+            }, 2000);
+        }
+
+        function generateTest() {
+            const language = document.getElementById('language').value;
+            const framework = document.getElementById('framework').value;
+            const className = document.getElementById('className').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const fileContent = document.getElementById('fileContent').value.trim();
+            const userMessage = document.getElementById('userMessage').value.trim();
+            
+            // Validate required fields
+            if (!className || !fileContent) {
+                showError('Class Name and File Content are required fields');
+                return;
+            }
+
+            const requestBody = {
+                language: language,
+                framework: framework,
+                className: className,
+                description: description,
+                fileContent: fileContent,
+                userMessage: userMessage
+            };
+
+            // Show loading state
+            const generateButton = document.querySelector('button[onclick="generateTest()"]');
+            const originalButtonText = generateButton.innerHTML;
+            generateButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+            generateButton.disabled = true;
+
+            fetch('/api/6', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || 'Failed to generate test');
+                    });
+                }
+                return response.text();
+            })
+            .then(generatedTest => {
+                // Display the result
+                document.getElementById('test-result-content').textContent = generatedTest || 'No test generated';
+                document.getElementById('test-generation-form').classList.add('hidden');
+                document.getElementById('test-generation-result').classList.remove('hidden');
+                
+                // Scroll to result
+                document.getElementById('test-generation-result').scrollIntoView({ behavior: 'smooth' });
+            })
+            .catch(error => {
+                showError('Error generating test: ' + error.message);
+            })
+            .finally(() => {
+                // Reset button state
+                generateButton.innerHTML = originalButtonText;
+                generateButton.disabled = false;
             });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.querySelector('p').textContent = message;
+            errorDiv.classList.remove('hidden');
+            
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        function resetTestForm() {
+            // Reset form
+            document.getElementById('className').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('fileContent').value = '';
+            document.getElementById('userMessage').value = '';
+            document.getElementById('test-generation-form').classList.remove('hidden');
+            document.getElementById('test-generation-result').classList.add('hidden');
+            
+            // Scroll to top of form
+            document.getElementById('test-generation-form').scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </body>
